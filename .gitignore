@@ -4,3 +4,4 @@ gurobi.log
 *.pyc
 *.sqlite
 .Rhistory
+.ipynb_checkpoints/*
