@@ -1,0 +1,6 @@
+.DS_Store
+gurobi.log
+.idea
+*.pyc
+*.sqlite
+.Rhistory
