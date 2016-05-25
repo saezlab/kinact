@@ -3,6 +3,8 @@
 
 This repository collects different computational methods to infer kinase activities from phosphoproteomics datasets. Each method will be accompanied by a protocol for explanation and in order to enable transfer to other datasets.
 
+Implemented by Jakob Wirbel in the Saez-Rodriguez Group at RWTH-Aachen.
+
 ## Methods included in kinact:
 
 + KSEA
