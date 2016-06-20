@@ -175,8 +175,6 @@ def get_kinase_targets_from_networkin(file_path, add_omnipath=True, normalizatio
     else:
         return adjacency_matrix
 
-print get_kinase_targets_from_networkin('./data/uniprot_results.txt').head()
-
 
 def _update_pypath_resource():
     """
