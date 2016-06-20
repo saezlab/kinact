@@ -32,31 +32,29 @@
 #
 # ######################################################################################################################
 
-# ######################################################################################################################
-# Import required libraries
 import numpy as np
 import pandas as pd
-from scipy.stats import hypergeom, ttest_rel, norm
+from scipy.stats import hypergeom, norm
 from statsmodels.sandbox.stats.multicomp import multipletests
-# ######################################################################################################################
-
-# ######################################################################################################################
-# Functions for KSEA
-# ######################################################################################################################
 
 
-# ######################################################################################################################
 # MEAN/MEDIAN: Function for KSEA calculates as mean of the fold changes of the substrate set
-#
-def ksea_mean(data_fc,              # the fold change data of a single condition, organised as a Pandas Series,
-                                    # with the name of the p-sites as indices
-              interactions,         # kinase-substrate relationships as adjacency matrix
-                                    # (1 for interaction, 0 or NA otherwise)
-              mP,                   # mean of the complete data set
-              delta,                # standard deviation of the complete data set
-              minimum_set_size=5,   # minimum number of p-sites present in substrate set of kinase, default is 5
-              median=False          # Boolean indicating if mean or median should be used
-              ):
+def ksea_mean(data_fc, interactions, mP, delta, minimum_set_size=5, median=False):
+
+    """
+    Computes the kinase activity scores as mean/median of the fold changes in the substrate set.
+    Statistical evaluation of the activity score is performed via a z-score.
+
+    :param data_fc: Series - fold change data of a single condition as Pandas Series with phosphosites as Index
+    :param interactions: DataFrame - Adjacency Matrix, for example created from kinact.get_kinase_targets()
+    :param mP: Float - mean of the fold changes of the complete data set
+    :param delta: Float - standard deviation of the complete data set
+    :param minimum_set_size: Integer - minimum number of phosphosites present in substrate set of a kinase
+    :param median: Boolean - indicates if mean or median should be used
+    :return: Tupel - (scores - KSEA activity scores as Pandas Series,
+                      p_value_adj - p-values of KSEA sccores, adjusted with Benjamini/Hochberg procedure
+                      )
+    """
 
     # Find intersection between kinase substrate sets and detected p-sites
     intersect = {kinase: list(set(interactions[kinase].replace(0, np.nan).dropna().index).intersection(data_fc.index))
@@ -94,19 +92,23 @@ def ksea_mean(data_fc,              # the fold change data of a single condition
     return scores, p_value_adj
 
 
-# ######################################################################################################################
 # DELTA: Function for KSEA with number of significantly up-regulated minus significantly down-regulated p-sites
-#
-def ksea_delta(data_fc,                  # the fold change data of a single condition, organised as a Pandas Series,
-                                         # with the name of the p-sites as indices
-               p_values,                 # the p-values of an statistical test if the fold change is significant
-                                         # compared to the control; it is assumed that the p-values have been
-                                         # transformed with -log10(p-value)
-               interactions,             # kinase-substrate relationships as adjacency matrix
-                                         # (1 for interaction, 0 or NA otherwise)
-               cut_off=-np.log10(0.05),  # cut-off for the p-value to define significant regulation, default is 0.05
-               minimum_set_size=5,       # minimum number of p-sites present in substrate set of kinase, default is 5
-               ):
+def ksea_delta(data_fc, p_values, interactions, cut_off=-np.log10(0.05), minimum_set_size=5):
+
+    """
+    Computes KSEA activity score as
+        number of significantly up-regulated minus significantly down-regulated phosphosites
+    Statistical evaluation of the score is performed with a hypergeometric test
+
+    :param data_fc: Series - fold change data of a single condition as Pandas Series with phosphosites as Index
+    :param p_values: Series - p-values organised as data_fc, transformed as neg. logarithm with base 10
+    :param interactions: DataFrame - Adjacency Matrix, for example created from kinact.get_kinase_targets()
+    :param cut_off: Float - cut-off for the p-value to define significant regulation, default is 0.05
+    :param minimum_set_size: Integer - minimum number of phosphosites present in substrate set of a kinase
+    :return: Tupel - (scores - KSEA activity scores as Pandas Series,
+                      p_value_adj - p-values of KSEA sccores, adjusted with Benjamini/Hochberg procedure
+                      )
+    """
 
     # Global parameters for the hyper-geometric test
     n_total = len(data_fc.dropna())
@@ -140,22 +142,27 @@ def ksea_delta(data_fc,                  # the fold change data of a single cond
     return scores, p_value_adj
 
 
-# ######################################################################################################################
 # MEAN - Alternative: Function for KSEA with mean of substrate set, considering only significantly changing p-sites
-#
-def ksea_mean_alt(data_fc,                  # the fold change data of a single condition, organised as a Pandas Series,
-                                            # with the name of the p-sites as indices
-                  p_values,                 # the p-values of an statistical test if the fold change is significant
-                                            # compared to the control; it is assumed that the p-values have been
-                                            # transformed with -log10(p-value)
-                  interactions,             # kinase-substrate relationships as adjacency matrix
-                                            # (1 for interaction, 0 or NA otherwise)
-                  mP,                       # mean of the complete data set
-                  delta,                    # standard deviation of the complete data set
-                  cut_off=-np.log10(0.05),  # cut-off for the p-value to define significant regulation, default is 0.05
-                  minimum_set_size=5,       # minimum number of p-sites present in substrate set of kinase, default is 5
-                  median=False              # Boolean indicating if mean or median should be used
-                  ):
+def ksea_mean_alt(data_fc, p_values, interactions, mP,
+                  delta, cut_off=-np.log10(0.05), minimum_set_size=5, median=False):
+
+    """
+    Computes the kinase activity scores as mean/median of the fold changes in the substrate set,
+        considers only significantly regulated phosphosites.
+    Statistical evaluation of the activity score is performed via a z-score.
+
+    :param data_fc: Series - fold change data of a single condition as Pandas Series with phosphosites as Index
+    :param p_values: Series - p-values organised as data_fc, transformed as neg. logarithm with base 10
+    :param interactions: DataFrame - Adjacency Matrix, for example created from kinact.get_kinase_targets()
+    :param mP: Float - mean of the fold changes of the complete data set
+    :param delta: Float - standard deviation of the complete data set
+    :param cut_off: Float - cut-off for the p-value to define significant regulation, default is 0.05
+    :param minimum_set_size: Integer - minimum number of phosphosites present in substrate set of a kinase
+    :param median: Boolean - indicates if mean or median should be used
+    :return: Tupel - (scores - KSEA activity scores as Pandas Series,
+                      p_value_adj - p-values of KSEA sccores, adjusted with Benjamini/Hochberg procedure
+                      )
+    """
 
     # Find intersection between kinase substrate sets and detected p-sites
     intersect = {kinase: list(set(interactions[kinase].replace(0, np.nan).dropna().index).intersection(data_fc.index))

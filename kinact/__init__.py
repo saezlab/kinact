@@ -41,7 +41,7 @@ def get_kinase_targets(sources=None):
                                 possible sources include: ['HPRD', 'Li2012', 'MIMP', 'PhosphoNetworks',
                                 'PhosphoSite', 'Signor', 'dbPTM', 'phosphoELM', 'DEPOD']
 
-        :return: Adjacency matrix - 1 for reported interaction (-1 for phosphatases), NaN for no interaction
+        :return: DataFrame - 1 for reported interaction (-1 for phosphatases), NaN for no interaction
                                     columns: kinase/phosphatase, rows: phospho-sites
     """
 
@@ -69,9 +69,10 @@ def get_kinase_targets(sources=None):
     # Add value column
     ptms_omnipath_phospho['value'] = 1
 
-    # Include only interactions of specified sources
-    ptms_omnipath_phospho = ptms_omnipath_phospho[[len(set(s.split(';')).intersection(sources)) >= 1
-                                                   for s in ptms_omnipath_phospho['Databases']]]
+    if len(sources) != len(allowed_sources):
+        # Include only interactions of specified sources
+        ptms_omnipath_phospho = ptms_omnipath_phospho[[len(set(s.split(';')).intersection(sources)) >= 1
+                                                       for s in ptms_omnipath_phospho['Databases']]]
 
     # Change value to negative value for dephosphorylation events
     ptms_omnipath_phospho.ix[ptms_omnipath_phospho['PTM_type'].str.startswith('de'), 'value'] = -1
@@ -132,7 +133,7 @@ def get_kinase_targets_from_networkin(file_path, add_omnipath=True, normalizatio
         :param add_omnipath: Boolean - Indicates whether to add the curated information from omnipath
         :param normalization_axis: Integer - indicate the axis of normalisation
 
-        :return: Adjacency matrix - interactions between kinases/phosphatases and individual p-sites are assigned
+        :return: DataFrame - interactions between kinases/phosphatases and individual p-sites are assigned
                                     with their respective score from networkin
     """
     # read results file generate by networkin (release 3.0)
@@ -184,6 +185,8 @@ def _update_pypath_resource():
         Update the file 'omnipath_ptms.txt',
         which is used to save the prior knowledge about kinase-substrate interactions from the Omnipath/pypath resource
 
+        Use with care! Additionally, pypath must by installed on your machine.
+
         :return: None
     """
     # try importing pypath
@@ -206,7 +209,15 @@ def _update_pypath_resource():
 
 
 def get_example_data():
+    """
+        Read in the dataset from the publication from de Graaf et al. in MCP,
+        and process it in order to use it for the other functions in kinact.
 
+        :return: Tupel - (data_fc - fold change data organised as pandas DataFrame
+                                    with different time points as columns and phosphosites as rows
+                          data_p_value - p-values organised as data_fc, transformed as neg. logarithm with base 10
+                          )
+    """
     # Read data
     data_raw = read_csv(os.path.split(__file__)[0] + '/data/deGraaf_2014_jurkat.csv', sep=',', header=0)
 
