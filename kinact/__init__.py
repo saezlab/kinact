@@ -1,6 +1,9 @@
 import os
 import numpy as np
 from pandas import read_csv, pivot_table
+import ksea
+
+__all__ = ['ksea']
 
 
 def id_conversion(lst, fr='uniprot', to='gene_name'):
@@ -200,3 +203,34 @@ def _update_pypath_resource():
     print 'pypath resource successfully updated!'
 
 # TODO: function to update the uniprot id mapping table
+
+
+def get_example_data():
+
+    # Read data
+    data_raw = read_csv(os.path.split(__file__)[0] + '/data/deGraaf_2014_jurkat.csv', sep=',', header=0)
+
+    # Filter for those p-sites that were matched ambiguously
+    data_reduced = data_raw[~data_raw['Proteins'].str.contains(';')]
+
+    # Create identifier for each phosphorylation site, e.g. P06239_S59 for the Serine 59 in the protein Lck
+    data_reduced.loc[:, 'ID'] = data_reduced['Proteins'] + '_' + data_reduced['Amino acid'] + \
+        data_reduced['Positions within proteins']
+    data_indexed = data_reduced.set_index('ID')
+
+    # Extract only relevant columns
+    data_relevant = data_indexed[[x for x in data_indexed if x.startswith('Average')]]
+
+    # Rename columns
+    data_relevant.columns = [x.split()[-1] for x in data_relevant]
+
+    # Convert abundances into fold changes compared to control (0 minutes after stimulation)
+    data_fc = data_relevant.sub(data_relevant['0min'], axis=0)
+    data_fc.drop('0min', axis=1, inplace=True)
+
+    # Also extract the p-values for the fold changes
+    data_p_value = data_indexed[[x for x in data_indexed if x.startswith('p value') and x.endswith('vs0min')]]
+    data_p_value.columns = [x.split('_')[-1].split('vs')[0] + 'min' for x in data_p_value]
+    data_p_value = data_p_value.astype('float')  # Excel saved the p-values as strings, not as floating point numbers
+
+    return data_fc, data_p_value
