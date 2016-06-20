@@ -121,14 +121,13 @@ def prepare_networkin_files(phospho_sites, output_dir=os.getcwd() + '/networkin_
     print 'Files for NetworKIN analysis successfully saved in %s' % output_dir
 
 
-# TODO: Function to create adjacency matrix from networkin output file
-def get_kinase_targets_from_networkin(file_path, add_omnipath=True, phosphatases=True):
+def get_kinase_targets_from_networkin(file_path, add_omnipath=True, normalization_axis=1):
     """
         Convert output of networkin to adjacency matrix
 
         :param file_path: Path - Path to the networkin output/result file
         :param add_omnipath: Boolean - Indicates whether to add the curated information from omnipath
-        :param phosphatases: Boolean - Include interactions of phosphatases as well
+        :param normalization_axis: Integer - indicate the axis of normalisation
 
         :return: Adjacency matrix - interactions between kinases/phosphatases and individual p-sites are assigned
                                     with their respective score from networkin
@@ -142,16 +141,39 @@ def get_kinase_targets_from_networkin(file_path, add_omnipath=True, phosphatases
     # restrict output to kinases and phosphatases
     nwkin_results = nwkin_results.where((nwkin_results['Tree'] == 'KIN') | (nwkin_results['Tree'] == 'PTP')).dropna()
 
-    # map enzyme descriptions from the networkin output to uniprot
-    # nwkin_results['enzyme'] = id_conversion(nwkin_results['Kinase/Phosphatase/Phospho-binding domain STRING ID'])
+    # Save phosphatases
+    ptp = np.unique(nwkin_results['Kinase/Phosphatase/Phospho-binding domain description'].where(
+        nwkin_results['Tree'] == 'PTP').dropna())
 
     # Create adjacency_matrix
     adjacency_matrix = pivot_table(data=nwkin_results,
                                    values='NetworKIN score',
                                    index='p_site',
                                    columns='Kinase/Phosphatase/Phospho-binding domain description')
+    # Normalise networKIN scores
+    adjacency_matrix = adjacency_matrix.divide(adjacency_matrix.max(axis=normalization_axis),
+                                               axis=list({0, 1}.difference([normalization_axis]))[0])
 
-    return adjacency_matrix
+    if add_omnipath:
+        omnipath = get_kinase_targets(sources=['all'])
+
+        adjacency_matrix = adjacency_matrix.reindex(columns=list(set(omnipath.columns.tolist()).union(
+            adjacency_matrix.columns.tolist())))
+
+        # Add information from curated data
+        for p_site in list(set(omnipath.index).intersection(adjacency_matrix.index)):
+            for kin in omnipath.loc[p_site, :].replace(0, np.nan).dropna().index:
+                if omnipath.ix[p_site, kin] == -1:
+                    adjacency_matrix.ix[p_site, kin] = -1
+                else:
+                    adjacency_matrix.ix[p_site, kin] = 1
+
+        # Convert scores for phosphatases
+        adjacency_matrix[ptp] = - adjacency_matrix[ptp]
+
+        return adjacency_matrix
+    else:
+        return adjacency_matrix
 
 print get_kinase_targets_from_networkin('./data/uniprot_results.txt').head()
 
