@@ -115,10 +115,12 @@ def prepare_networkin_files(phospho_sites, output_dir=os.getcwd() + '/networkin_
 
         # save the sequence of the complete protein into the fasta file, so that networkin can map the phospho-sites
         if not psite.split('_')[0] in added_sequences:
-            fasta_file.write('>' + psite.split('_')[0] + '\n')
-            fasta_file.write(sequences.ix[psite.split('_')[0]] + '\n')
-            added_sequences.append(psite.split('_')[0])
-
+            if psite.split('_')[0] in sequences.index:
+                fasta_file.write('>' + psite.split('_')[0] + '\n')
+                fasta_file.write(sequences.ix[psite.split('_')[0]].values[0] + '\n')
+                added_sequences.append(psite.split('_')[0])
+            else:
+                added_sequences.append(psite.split('_')[0])
     # Close files and print success message
     site_file.close()
     fasta_file.close()
