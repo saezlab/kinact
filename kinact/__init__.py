@@ -127,13 +127,14 @@ def prepare_networkin_files(phospho_sites, output_dir=os.getcwd() + '/networkin_
     print 'Files for NetworKIN analysis successfully saved in %s' % output_dir
 
 
-def get_kinase_targets_from_networkin(file_path, add_omnipath=True, normalization_axis=1):
+def get_kinase_targets_from_networkin(file_path, add_omnipath=True, normalization_axis=1, score_cut_off=0.5):
     """
         Convert output of networkin to adjacency matrix
 
         :param file_path: Path - Path to the networkin output/result file
         :param add_omnipath: Boolean - Indicates whether to add the curated information from omnipath
         :param normalization_axis: Integer - indicate the axis of normalisation
+        :param score_cut_off: Float - cut off for the networkin score
 
         :return: DataFrame - interactions between kinases/phosphatases and individual p-sites are assigned
                                     with their respective score from networkin
@@ -156,6 +157,9 @@ def get_kinase_targets_from_networkin(file_path, add_omnipath=True, normalizatio
                                    values='NetworKIN score',
                                    index='p_site',
                                    columns='Kinase/Phosphatase/Phospho-binding domain description')
+    # Set all scores below the cut-off to NA
+    adjacency_matrix = adjacency_matrix.where(adjacency_matrix > score_cut_off, np.nan)
+
     # Normalise networKIN scores
     adjacency_matrix = adjacency_matrix.divide(adjacency_matrix.max(axis=normalization_axis),
                                                axis=list({0, 1}.difference([normalization_axis]))[0])
