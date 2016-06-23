@@ -127,13 +127,13 @@ def prepare_networkin_files(phospho_sites, output_dir=os.getcwd() + '/networkin_
     print 'Files for NetworKIN analysis successfully saved in %s' % output_dir
 
 
-def get_kinase_targets_from_networkin(file_path, add_omnipath=True, normalization_axis=1, score_cut_off=0.5):
+def get_kinase_targets_from_networkin(file_path, add_omnipath=True, binarize=True, score_cut_off=0.5):
     """
         Convert output of networkin to adjacency matrix
 
         :param file_path: Path - Path to the networkin output/result file
         :param add_omnipath: Boolean - Indicates whether to add the curated information from omnipath
-        :param normalization_axis: Integer - indicate the axis of normalisation
+        :param binarize: Boolean - Indicates whether the matrix should consist of only 1 and 0, or of normalised scores
         :param score_cut_off: Float - cut off for the networkin score
 
         :return: DataFrame - interactions between kinases/phosphatases and individual p-sites are assigned
@@ -157,13 +157,19 @@ def get_kinase_targets_from_networkin(file_path, add_omnipath=True, normalizatio
                                    values='NetworKIN score',
                                    index='p_site',
                                    columns='Kinase/Phosphatase/Phospho-binding domain description')
+
     # Set all scores below the cut-off to NA
     adjacency_matrix = adjacency_matrix.where(adjacency_matrix > score_cut_off, np.nan)
 
-    # Normalise networKIN scores
-    adjacency_matrix = adjacency_matrix.divide(adjacency_matrix.max(axis=normalization_axis),
-                                               axis=list({0, 1}.difference([normalization_axis]))[0])
+    # Binarize or normalize adjacency matrix
+    if binarize:
+        adjacency_matrix[adjacency_matrix > score_cut_off] = 1
+        adjacency_matrix[adjacency_matrix < score_cut_off] = np.nan
+    else:
+        # Normalise networKIN scores
+        adjacency_matrix = adjacency_matrix.divide(adjacency_matrix.max(axis=1), axis=0)
 
+    # Add omnipath/pypath resources
     if add_omnipath:
         omnipath = get_kinase_targets(sources=['all'])
 
@@ -183,6 +189,10 @@ def get_kinase_targets_from_networkin(file_path, add_omnipath=True, normalizatio
 
         return adjacency_matrix
     else:
+
+        # Convert scores for phosphatases
+        adjacency_matrix[ptp] = - adjacency_matrix[ptp]
+
         return adjacency_matrix
 
 
@@ -199,7 +209,8 @@ def _update_pypath_resource():
     try:
         from pypath import main
     except:
-        raise StandardError('pypath not installed on your machine. Please install pypath before you continue!')
+        raise StandardError('The package pypath is not installed on your machine. '
+                            'Please install pypath before you continue!')
 
     pa = main.PyPath()
 
