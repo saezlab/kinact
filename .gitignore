@@ -4,4 +4,7 @@ gurobi.log
 *.pyc
 *.sqlite
 .Rhistory
-.ipynb_checkpoints/*
+build/*
+kinact.egg-info/*
+dist/*
+doc/.ipynb_checkpoints/*
