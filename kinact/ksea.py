@@ -31,16 +31,13 @@
 #      http://www.gnu.org/licenses/gpl-3.0.html
 #
 # ######################################################################################################################
+from utils import np, Series, norm, multipletests, hypergeom
 
-import numpy as np
-import pandas as pd
-from scipy.stats import hypergeom, norm
-from statsmodels.sandbox.stats.multicomp import multipletests
+__all__ = ['ksea_mean', 'ksea_delta', 'ksea_mean_alt']
 
 
 # MEAN/MEDIAN: Function for KSEA calculates as mean of the fold changes of the substrate set
 def ksea_mean(data_fc, interactions, mP, delta, minimum_set_size=5, median=False):
-
     """
     Computes the kinase activity scores as mean/median of the fold changes in the substrate set.
     Statistical evaluation of the activity score is performed via a z-score.
@@ -69,32 +66,31 @@ def ksea_mean(data_fc, interactions, mP, delta, minimum_set_size=5, median=False
 
     if median:
         # Calculate the mean of the substrate set relative to the mean of the whole data set
-        scores = pd.Series({kinase: np.median([data_fc.ix[intersect[kinase]]])
-                            for kinase in intersect}).dropna()
+        scores = Series({kinase: np.median([data_fc.ix[intersect[kinase]]])
+                         for kinase in intersect}).dropna()
 
-        z_scores = pd.Series({kinase: abs((np.median([data_fc.ix[intersect[kinase]]]) - mean_all) *
-                                          np.sqrt(len(intersect[kinase])) * 1 / sd_all)
-                              for kinase in intersect}).dropna()
+        z_scores = Series({kinase: abs((np.median([data_fc.ix[intersect[kinase]]]) - mean_all) *
+                                       np.sqrt(len(intersect[kinase])) * 1 / sd_all)
+                           for kinase in intersect}).dropna()
     else:
         # Calculate the mean of the substrate set relative to the mean of the whole data set
-        scores = pd.Series({kinase: np.mean([data_fc.ix[intersect[kinase]]])
-                            for kinase in intersect}).dropna()
+        scores = Series({kinase: np.mean([data_fc.ix[intersect[kinase]]])
+                         for kinase in intersect}).dropna()
 
-        z_scores = pd.Series({kinase: abs((np.mean([data_fc.ix[intersect[kinase]]]) - mean_all) *
-                                          np.sqrt(len(intersect[kinase])) * 1 / sd_all)
-                              for kinase in intersect}).dropna()
+        z_scores = Series({kinase: abs((np.mean([data_fc.ix[intersect[kinase]]]) - mean_all) *
+                                       np.sqrt(len(intersect[kinase])) * 1 / sd_all)
+                           for kinase in intersect}).dropna()
 
     # Convert z-scores into p-values and adjust for multiple testing
-    p_value = pd.Series(norm.sf(z_scores), index=z_scores.index)
+    p_value = Series(norm.sf(z_scores), index=z_scores.index)
     # Adjust p-values for multiple testing using the Benjamini/Hochberg correction
-    p_value_adj = pd.Series(multipletests(p_value, alpha=0.05, method='fdr_bh')[1], index=p_value.index)
+    p_value_adj = Series(multipletests(p_value, alpha=0.05, method='fdr_bh')[1], index=p_value.index)
 
     return scores, p_value_adj
 
 
 # DELTA: Function for KSEA with number of significantly up-regulated minus significantly down-regulated p-sites
 def ksea_delta(data_fc, p_values, interactions, cut_off=-np.log10(0.05), minimum_set_size=5):
-
     """
     Computes KSEA activity score as
         number of significantly up-regulated minus significantly down-regulated phosphosites
@@ -126,18 +122,18 @@ def ksea_delta(data_fc, p_values, interactions, cut_off=-np.log10(0.05), minimum
 
     # Calculate the number of p-sites in the substrate group that are significantly increased
     #                                                       minus the ones that are decreased
-    scores = pd.Series({kinase: len(data_fc.ix[intersect[kinase]].where(
+    scores = Series({kinase: len(data_fc.ix[intersect[kinase]].where(
         (data_fc.ix[intersect[kinase]] > 0) & (p_values.ix[intersect[kinase]] > cut_off)).dropna()) -
-                                len(data_fc.ix[intersect[kinase]].where(
-        (data_fc.ix[intersect[kinase]] < 0) & (p_values.ix[intersect[kinase]] > cut_off)).dropna())
-                        for kinase in intersect})
+                             len(data_fc.ix[intersect[kinase]].where(
+                                 (data_fc.ix[intersect[kinase]] < 0) & (
+                                  p_values.ix[intersect[kinase]] > cut_off)).dropna()) for kinase in intersect})
 
     # Calculate p-value of the score using the hyper-geometric distribution
-    p_value = pd.Series({kinase: hyper_geom_dist[kinase].pmf(len(np.where(p_values.ix[intersect[kinase]] > cut_off)[0]))
-                        if len(np.where(p_values.ix[intersect[kinase]] > cut_off)[0]) > 0 else 1
-                        for kinase in intersect})
+    p_value = Series({kinase: hyper_geom_dist[kinase].pmf(len(np.where(p_values.ix[intersect[kinase]] > cut_off)[0]))
+                      if len(np.where(p_values.ix[intersect[kinase]] > cut_off)[0]) > 0 else 1
+                      for kinase in intersect})
     # Benjamini-Hochberg correction of the p-values
-    p_value_adj = pd.Series(multipletests(p_value, alpha=0.05, method='fdr_bh')[1], index=p_value.index)
+    p_value_adj = Series(multipletests(p_value, alpha=0.05, method='fdr_bh')[1], index=p_value.index)
 
     return scores, p_value_adj
 
@@ -145,7 +141,6 @@ def ksea_delta(data_fc, p_values, interactions, cut_off=-np.log10(0.05), minimum
 # MEAN - Alternative: Function for KSEA with mean of substrate set, considering only significantly changing p-sites
 def ksea_mean_alt(data_fc, p_values, interactions, mP,
                   delta, cut_off=-np.log10(0.05), minimum_set_size=5, median=False):
-
     """
     Computes the kinase activity scores as mean/median of the fold changes in the substrate set,
         considers only significantly regulated phosphosites.
@@ -181,24 +176,24 @@ def ksea_mean_alt(data_fc, p_values, interactions, mP,
 
     if median:
         # Calculate the median of the substrate set considering only significantly changed p-sites
-        scores = pd.Series({kinase: np.median(reduced_substrate_set[kinase]) for kinase in intersect}).dropna()
+        scores = Series({kinase: np.median(reduced_substrate_set[kinase]) for kinase in intersect}).dropna()
 
-        z_scores = pd.Series(
+        z_scores = Series(
             {kinase: abs((np.median(reduced_substrate_set[kinase]) - mean_all) *
-                     np.sqrt(len(reduced_substrate_set[kinase])) * 1 / sd_all)
+                         np.sqrt(len(reduced_substrate_set[kinase])) * 1 / sd_all)
              for kinase in intersect}).dropna()
     else:
         # Calculate the mean of the substrate set considering only significantly changed p-sites
-        scores = pd.Series({kinase: np.mean(reduced_substrate_set[kinase]) for kinase in intersect}).dropna()
+        scores = Series({kinase: np.mean(reduced_substrate_set[kinase]) for kinase in intersect}).dropna()
 
-        z_scores = pd.Series(
+        z_scores = Series(
             {kinase: abs((np.mean(reduced_substrate_set[kinase]) - mean_all) *
                          np.sqrt(len(reduced_substrate_set[kinase])) * 1 / sd_all)
              for kinase in intersect}).dropna()
 
     # Convert z-scores into p-values and adjust for multiple testing
-    p_value = pd.Series(norm.sf(z_scores), index=z_scores.index)
+    p_value = Series(norm.sf(z_scores), index=z_scores.index)
     # Adjust p-values for multiple testing using the Benjamini/Hochberg correction
-    p_value_adj = pd.Series(multipletests(p_value, alpha=0.05, method='fdr_bh')[1], index=p_value.index)
+    p_value_adj = Series(multipletests(p_value, alpha=0.05, method='fdr_bh')[1], index=p_value.index)
 
     return scores, p_value_adj
