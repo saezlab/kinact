@@ -60,7 +60,8 @@ def get_kinase_targets_from_networkin(file_path, add_omnipath=True, score_cut_of
     nwkin_results['p_site'] = nwkin_results['#Name'] + '_' + nwkin_results['Position']
 
     # restrict output to kinases and phosphatases
-    nwkin_results = nwkin_results.where((nwkin_results['Tree'] == 'KIN') | (nwkin_results['Tree'] == 'PTP')).dropna()
+    nwkin_results = nwkin_results.where((nwkin_results['Tree'] == 'KIN') |
+                                        (nwkin_results['Tree'] == 'PTP')).dropna(how='all')
 
     # Save phosphatases
     ptp = np.unique(nwkin_results['Kinase/Phosphatase/Phospho-binding domain description'].where(
