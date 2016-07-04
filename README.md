@@ -24,7 +24,7 @@ import kinact
 data_fc, data_p_value = kinact.get_example_data()
 print data_fc.head()
 
-		"5min"		"10min"		"20min"		"30min"		"60min"
+             "5min"     "10min"    "20min"    "30min"    "60min"
 ID
 A0AVK6_S71   −0.319306  −0.484960  −0.798082  −0.856103  −0.928753 
 A0FGR8_S743  −0.856661  −0.981951  −1.500412  −1.441868  −0.861470 
