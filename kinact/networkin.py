@@ -1,12 +1,13 @@
 from utils import get_kinase_targets, pivot_table, read_csv, os, np, Series, norm, multipletests
 
 
-def prepare_networkin_files(phospho_sites, output_dir=os.getcwd() + '/networkin_files/'):
+def prepare_networkin_files(phospho_sites, output_dir=os.getcwd() + '/networkin_files/', organism='human'):
     """
         Prepare networkin prediction of up-stream kinases for a list of phospho-sites
 
         :param phospho_sites: List - List of phospho-site identifiers
         :param output_dir: Path - Directory in which to save the files that networkin needs
+        :param organism: String - Organism of interest
 
         :return: None - does not return anything, but saves the relevant files for the networkin analysis
     """
@@ -14,8 +15,12 @@ def prepare_networkin_files(phospho_sites, output_dir=os.getcwd() + '/networkin_
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
 
+    # Check if a supported organisms is supplied
+    if organism != 'human' and organism != 'mouse':
+        raise StandardError('No sequences available for the requested organism: %s' % organism)
+
     # load UniProt/SwissProt sequences from the supplied data
-    sequences = read_csv(os.path.split(__file__)[0] + '/data/sequences.tab', sep='\t', usecols=[0, 3], index_col=0)
+    sequences = read_csv(os.path.split(__file__)[0] + '/data/sequences_' + organism + '.tab', sep='\t', index_col=0)
 
     # open output files
     site_file = open(output_dir + 'site_file.txt', 'w+')
@@ -129,11 +134,14 @@ def weighted_mean(data_fc, interactions, mP, delta, minimum_set_size=5):
     interactions_red = interactions_red.ix[:, interactions_red.replace(0, np.nan).notnull().sum() >= minimum_set_size]
 
     # Calculate mean of fold changes in susbtrate set, weighted with the networkin scores
-    scores = Series({kinase: (data_fc*interactions_red[kinase]).sum()/float(interactions_red[kinase].replace(0, np.nan).dropna().sum())
+    scores = Series({kinase: (data_fc*interactions_red[kinase]).sum()/float(
+        abs(interactions_red[kinase].replace(0, np.nan).dropna().sum()))
                      for kinase in interactions_red})
 
-    z_scores = Series({kinase: (scores[kinase]-mP) * np.sqrt(abs(interactions_red[kinase].replace(
-        0, np.nan).sum())) * 1/delta for kinase in interactions_red})
+    # z_scores = Series({kinase: (abs(scores[kinase])-mP) * np.sqrt(abs(interactions_red[kinase].replace(
+    #     0, np.nan).sum())) * 1/delta for kinase in interactions_red})
+    z_scores = Series({kinase: (abs(scores[kinase]) - mP) * np.sqrt(len(interactions_red[kinase].replace(
+        0, np.nan).dropna())) * 1 / delta for kinase in interactions_red})
 
     # Convert z-scores into p-values and adjust for multiple testing
     p_value = Series(norm.sf(z_scores), index=z_scores.index)
