@@ -33,7 +33,7 @@ A0FGR8_S691   0.271458   0.264596   0.501685   0.461984   0.655501
 A0JLT2_S226  −0.080786   1.069710   0.519780   0.520883  −0.296040
 ```
 
-Prior-knowledge information about kinase-substrate interactions can be loaded from the `pypath` package (see also the [documentation](http://omnipathdb.org/)).
+Prior-knowledge information about kinase-substrate interactions can be loaded with the `pypath` package (see also the [documentation](http://omnipathdb.org/) or the [github repository](https://github.com/saezlab/pypath)).
 ```python
 adjacency_matrix = kinact.get_kinase_targets(sources=['all'])
 ```
@@ -41,9 +41,9 @@ adjacency_matrix = kinact.get_kinase_targets(sources=['all'])
 Finally, estimation of the kinase activities can be performed as follows for the example of the KSEA protocol:
 ```python
 scores, p_values = kinact.ksea.ksea_mean(data_fc=data_fc["5min"].dropna(),
-					 interactions=adjacency_matrix,
-					 mP=data_fc["5min"].values.mean(),
-					 delta=data_fc["5min"].values.std())
+                                         interactions=adjacency_matrix,
+                                         mP=data_fc["5min"].values.mean(),
+                                         delta=data_fc["5min"].values.std())
 ```
 
 ## Methods included in kinact:
