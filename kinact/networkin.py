@@ -138,10 +138,13 @@ def weighted_mean(data_fc, interactions, mP, delta, minimum_set_size=5):
         abs(interactions_red[kinase].replace(0, np.nan).dropna().sum()))
                      for kinase in interactions_red})
 
-    # z_scores = Series({kinase: (abs(scores[kinase])-mP) * np.sqrt(abs(interactions_red[kinase].replace(
-    #     0, np.nan).sum())) * 1/delta for kinase in interactions_red})
-    z_scores = Series({kinase: (abs(scores[kinase]) - mP) * np.sqrt(len(interactions_red[kinase].replace(
-        0, np.nan).dropna())) * 1 / delta for kinase in interactions_red})
+    # Not clear yet how to calculate the p-value of enrichment in the best way:
+    # Sum of scores?
+    z_scores = Series({kinase: (abs(scores[kinase])-mP) * np.sqrt(abs(interactions_red[kinase].replace(
+        0, np.nan).sum())) * 1/delta for kinase in interactions_red})
+    # or number of p-sites in substrate set (as in KSEA)?
+    # z_scores = Series({kinase: (abs(scores[kinase]) - mP) * np.sqrt(len(interactions_red[kinase].replace(
+    #     0, np.nan).dropna())) * 1 / delta for kinase in interactions_red})
 
     # Convert z-scores into p-values and adjust for multiple testing
     p_value = Series(norm.sf(z_scores), index=z_scores.index)
