@@ -7,7 +7,7 @@ def prepare_networkin_files(phospho_sites, output_dir=os.getcwd() + '/networkin_
 
         :param phospho_sites: List - List of phospho-site identifiers
         :param output_dir: Path - Directory in which to save the files that networkin needs
-        :param organism: String - Organism of interest
+        :param organism: String - Organism of interest (human, mouse, or yeast)
 
         :return: None - does not return anything, but saves the relevant files for the networkin analysis
     """
@@ -16,7 +16,7 @@ def prepare_networkin_files(phospho_sites, output_dir=os.getcwd() + '/networkin_
         os.mkdir(output_dir)
 
     # Check if a supported organisms is supplied
-    if organism != 'human' and organism != 'mouse':
+    if organism != 'human' and organism != 'mouse' and organism != 'yeast':
         raise StandardError('No sequences available for the requested organism: %s' % organism)
 
     # load UniProt/SwissProt sequences from the supplied data
@@ -40,6 +40,8 @@ def prepare_networkin_files(phospho_sites, output_dir=os.getcwd() + '/networkin_
                 fasta_file.write(sequences.ix[psite.split('_')[0]].values[0] + '\n')
                 added_sequences.append(psite.split('_')[0])
             else:
+                print "Protein '%s' could not be found in the reviewed UniProt (Swiss-Prot) release." % \
+                      psite.split('_')[0]
                 added_sequences.append(psite.split('_')[0])
     # Close files and print success message
     site_file.close()
