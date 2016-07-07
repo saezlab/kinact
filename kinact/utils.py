@@ -88,7 +88,7 @@ def get_kinase_targets(sources=None):
     return adjacency_matrix
 
 
-def _update_pypath_resource():
+def __update_pypath_resource():
     """
         Update the file 'omnipath_ptms.txt',
         which is used to save the prior knowledge about kinase-substrate interactions from the Omnipath/pypath resource
