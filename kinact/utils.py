@@ -1,6 +1,7 @@
 import os
 import numpy as np
-from pandas import read_csv, pivot_table, Series
+import warnings
+from pandas import read_csv, pivot_table, Series, DataFrame
 from scipy.stats import hypergeom, norm
 from statsmodels.sandbox.stats.multicomp import multipletests
 
@@ -35,57 +36,120 @@ def id_conversion(lst, fr='uniprot', to='gene_name'):
     return results
 
 
-def get_kinase_targets(sources=None):
+def get_kinase_targets(sources=None, organism='human'):
     """
         Retrieve kinase-substrate interactions from the OmniPath resource.
         :param sources: [String] - List of sources from which to import kinase-substrate interactions;
                                 possible sources include:
                                 ['ARN', 'CA1', 'dbPTM', 'DEPOD', 'HPRD', 'MIMP', 'Macrophage', 'NRF2ome',
                                 'phosphoELM', 'PhosphoSite', 'SPIKE', 'SignaLink3', 'Signor', 'TRIP']
+        :param organism: String - Organism of interest (currently: human, mouse, yeast)
 
         :return: DataFrame - 1 for reported interaction (-1 for phosphatases), NaN for no interaction
                                     columns: kinase/phosphatase, rows: phospho-sites
     """
 
-    # Check that only allowed sources are used
-    if sources is None:
-        sources = ['PhosphoSite']
-    allowed_sources = ['ARN', 'CA1', 'dbPTM', 'DEPOD', 'HPRD', 'MIMP', 'Macrophage', 'NRF2ome',
-                       'phosphoELM', 'PhosphoSite', 'SPIKE', 'SignaLink3', 'Signor', 'TRIP']
-    if len(set(sources).difference(allowed_sources)) > 0 and sources != ['all']:
-        raise StandardError('Please use only the sources integrated into pypath!')
-    if sources == ['all']:
-        sources = allowed_sources
-    # Read in the data from OmniPath
-    ptms_omnipath = read_csv(os.path.split(__file__)[0]+'/data/omnipath_ptms.txt', sep='\t')
+    # Check if a supported organisms is supplied
+    if organism != 'human' and organism != 'mouse' and organism != 'yeast':
+        raise StandardError('No sequences available for the requested organism: %s' % organism)
 
-    # Create unique identifier for each p-site
-    ptms_omnipath['p_site'] = ptms_omnipath['UniProt_B'] + \
-        '_' + \
-        ptms_omnipath['Residue_letter'] + \
-        ptms_omnipath['Residue_number'].astype(str)
+    if organism == 'human':
+        # Check that only allowed sources are used
+        if sources is None:
+            sources = ['PhosphoSite']
+        allowed_sources = ['ARN', 'CA1', 'dbPTM', 'DEPOD', 'HPRD', 'MIMP', 'Macrophage', 'NRF2ome',
+                           'phosphoELM', 'PhosphoSite', 'SPIKE', 'SignaLink3', 'Signor', 'TRIP']
+        if len(set(sources).difference(allowed_sources)) > 0 and sources != ['all']:
+            raise StandardError('Please use only the sources integrated into pypath!')
+        if sources == ['all']:
+            sources = allowed_sources
+        # Read in the data from OmniPath
+        ptms_omnipath = read_csv(os.path.split(__file__)[0]+'/data/omnipath_ptms.txt', sep='\t')
 
-    # Restrict the data on phosphorylation and dephosphorylation modification
-    ptms_omnipath_phospho = ptms_omnipath.where(ptms_omnipath['PTM_type'].str.contains('phosphorylation')).dropna()
+        # Create unique identifier for each p-site
+        ptms_omnipath['p_site'] = ptms_omnipath['UniProt_B'] + \
+            '_' + \
+            ptms_omnipath['Residue_letter'] + \
+            ptms_omnipath['Residue_number'].astype(str)
 
-    # Add value column
-    ptms_omnipath_phospho['value'] = 1
+        # Restrict the data on phosphorylation and dephosphorylation modification
+        ptms_omnipath_phospho = ptms_omnipath.where(ptms_omnipath['PTM_type'].str.contains('phosphorylation')).dropna()
 
-    if len(sources) != len(allowed_sources):
-        # Include only interactions of specified sources
-        ptms_omnipath_phospho = ptms_omnipath_phospho[[len(set(s.split(';')).intersection(sources)) >= 1
-                                                       for s in ptms_omnipath_phospho['Databases']]]
+        # Add value column
+        ptms_omnipath_phospho['value'] = 1
 
-    # Change value to negative value for dephosphorylation events
-    ptms_omnipath_phospho.ix[ptms_omnipath_phospho['PTM_type'].str.startswith('de'), 'value'] = -1
+        if len(sources) != len(allowed_sources):
+            # Include only interactions of specified sources
+            ptms_omnipath_phospho = ptms_omnipath_phospho[[len(set(s.split(';')).intersection(sources)) >= 1
+                                                           for s in ptms_omnipath_phospho['Databases']]]
 
-    # Create pivot-table from pandas function
-    adjacency_matrix = pivot_table(ptms_omnipath_phospho, values='value', index='p_site', columns='UniProt_A')
+        # Change value to negative value for dephosphorylation events
+        ptms_omnipath_phospho.ix[ptms_omnipath_phospho['PTM_type'].str.startswith('de'), 'value'] = -1
 
-    # rename columns
-    adjacency_matrix.columns = id_conversion(adjacency_matrix.columns.tolist())
+        # Create pivot-table from pandas function
+        adjacency_matrix = pivot_table(ptms_omnipath_phospho, values='value', index='p_site', columns='UniProt_A')
 
-    return adjacency_matrix
+        # rename columns
+        adjacency_matrix.columns = id_conversion(adjacency_matrix.columns.tolist())
+        return adjacency_matrix
+
+    elif organism == 'yeast':
+        # Check if sources had been supplied and raise warning if yes
+        if sources is not None:
+            warnings.warn('Sources parameter is only supported for human: value will be ignored!')
+        # Read in data from phosphoGRID
+        phospho_grid = read_csv(os.path.split(__file__)[0] + '/data/phospho_grid.txt', sep='\t', skiprows=32)
+
+        # Create unique identifier
+        phospho_grid['p_site'] = phospho_grid['A'] + '_' + phospho_grid['C']
+
+        # Replace empty cells with np.nan
+        phospho_grid.replace('-', np.nan, inplace=True)
+
+        # Restrict to columns with known kinases (J) or phosphatases (N)
+        kinases = phospho_grid[phospho_grid['K'].notnull()]
+        phosphatases = phospho_grid[phospho_grid['O'].notnull()]
+
+        # Extract interactions between all kinases and phosphatases
+        kinases = [(site, kin, 1) for site, sources in kinases[['p_site', 'K']].values
+                   for kin in sources.split('|') if kin != '']
+        phosphatases = [(site, phos, -1) for site, sources in phosphatases[['p_site', 'O']].values
+                        for phos in sources.split('|') if phos != '']
+        interactions = kinases + phosphatases
+        interactions = DataFrame(interactions, columns=['p_site', 'enzyme', 'value'])
+
+        # Extract adjacency matrix
+        adjacency_matrix = pivot_table(data=interactions, values='value',
+                                       index='p_site', columns='enzyme', fill_value=np.nan)
+        return adjacency_matrix
+
+    elif organism == 'mouse':
+        # Check if sources had been supplied and raise warning if yes
+        if sources is not None:
+            warnings.warn('Sources parameter is only supported for human: value will be ignored!')
+
+        # Read in data from PhosphoSitePlus
+        phosphosite = read_csv(os.path.split(__file__)[0] + '/data/PhosphoSitePlus.txt', sep='\t')
+        phosphosite_mouse = phosphosite.loc[(phosphosite['KIN_ORGANISM'] == 'mouse') &
+                                            (phosphosite['SUB_ORGANISM'] == 'mouse')]
+        phosphosite_ksi = [(acc + '_' + rsd, kin)
+                       for acc, rsd, kin in phosphosite_mouse[['SUB_ACC_ID', 'SUB_MOD_RSD', 'KINASE']].values]
+        # and RegPhos
+        reg_phos = read_csv(os.path.split(__file__)[0] + '/data/reg_phos_mouse.txt', sep='\t')
+        reg_phos_red = reg_phos[reg_phos['catalytic kinase'].notnull()]
+        reg_phos_ksi = [(acc + '_' + rsd + str(pos), kin.split('_group')[0])
+                        if kin != 'autocatalysis'
+                        else (acc + '_' + rsd + str(pos), sub_id.split('_MOUSE')[0])
+                        for sub_id, acc, rsd, pos, kin
+                        in reg_phos_red[['ID', 'AC', 'code', 'position', 'catalytic kinase']].values]
+        # Combine interactions and construct adjacency matrix
+        interactions = phosphosite_ksi + reg_phos_ksi
+        interactions = DataFrame(interactions, columns=['p_site', 'kinase'])
+        interactions['value'] = 1
+
+        adjacency_matrix = pivot_table(data=interactions, index='p_site',
+                                       columns='kinase', values='value', fill_value=np.nan)
+        return adjacency_matrix
 
 
 def __update_pypath_resource():
@@ -103,6 +167,8 @@ def __update_pypath_resource():
     except:
         raise StandardError('The package pypath is not installed on your machine. '
                             'Please install pypath before you continue!')
+
+    print 'Using pypath to update the prior-knowledge information about kinase-substrate interactions.'
 
     pa = main.PyPath()
 
