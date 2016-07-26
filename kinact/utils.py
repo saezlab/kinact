@@ -56,7 +56,7 @@ def get_kinase_targets(sources=None, organism='human'):
     if organism == 'human':
         # Check that only allowed sources are used
         if sources is None:
-            sources = ['PhosphoSite']
+            sources = ['PhosphoSite', 'Signor']
         allowed_sources = ['ARN', 'CA1', 'dbPTM', 'DEPOD', 'HPRD', 'MIMP', 'Macrophage', 'NRF2ome',
                            'phosphoELM', 'PhosphoSite', 'SPIKE', 'SignaLink3', 'Signor', 'TRIP']
         if len(set(sources).difference(allowed_sources)) > 0 and sources != ['all']:
@@ -96,7 +96,7 @@ def get_kinase_targets(sources=None, organism='human'):
     elif organism == 'yeast':
         # Check if sources had been supplied and raise warning if yes
         if sources is not None:
-            warnings.warn('Sources parameter is only supported for human: value will be ignored!')
+            warnings.warn('Sources parameter is only supported for organism human: value will be ignored!')
         # Read in data from phosphoGRID
         phospho_grid = read_csv(os.path.split(__file__)[0] + '/data/phospho_grid.txt', sep='\t', skiprows=32)
 
@@ -126,7 +126,7 @@ def get_kinase_targets(sources=None, organism='human'):
     elif organism == 'mouse':
         # Check if sources had been supplied and raise warning if yes
         if sources is not None:
-            warnings.warn('Sources parameter is only supported for human: value will be ignored!')
+            warnings.warn('Sources parameter is only supported for organism human: value will be ignored!')
 
         # Read in data from PhosphoSitePlus
         phosphosite = read_csv(os.path.split(__file__)[0] + '/data/PhosphoSitePlus.txt', sep='\t')

@@ -9,12 +9,18 @@ The package has been implemented by Jakob Wirbel in the [Saez-Rodriguez Group at
 
 ## Installation
 
-In order to use `kinact`, clone the repository and type
+#### Mac/Linux Users
+
+In order to use `kinact`, open a command line/terminal. You can clone the repository and install the package with
 
 ```
+git clone https://github.com/saezlab/kinact.git
+cd kinact
 python setup.py install
 ```
-in your console.
+#### Windows Users
+
+
 
 ## Quick start
 
@@ -33,9 +39,10 @@ A0FGR8_S691   0.271458   0.264596   0.501685   0.461984   0.655501
 A0JLT2_S226  −0.080786   1.069710   0.519780   0.520883  −0.296040
 ```
 
-Prior-knowledge information about kinase-substrate interactions can be loaded with the `pypath` package (see also the [documentation](http://omnipathdb.org/) or the [github repository](https://github.com/saezlab/pypath)).
+Prior-knowledge information about kinase-substrate interactions can be loaded from the `pypath` package (see also the [documentation](http://omnipathdb.org/) or the [github repository](https://github.com/saezlab/pypath)). Per default, interactions from [PhosphoSitePlus](http://www.phosphosite.org/) and [Signor](http://signor.uniroma2.it/) are loaded, but other sources from pypath can be specified with the `sources` parameter of the function. For kinase-substrate interactions from other organisms, specify `organim='yeast` or `organism='mouse'` in the function call.
+
 ```python
-adjacency_matrix = kinact.get_kinase_targets(sources=['all'])
+adjacency_matrix = kinact.get_kinase_targets()
 ```
 
 Finally, estimation of the kinase activities can be performed as follows for the example of the KSEA protocol:
