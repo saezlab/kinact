@@ -1,4 +1,4 @@
-from utils import get_kinase_targets, pivot_table, read_csv, os, np, Series, norm, multipletests
+from kinact.utils import get_kinase_targets, pivot_table, read_csv, os, np, Series, norm, multipletests
 
 
 def prepare_networkin_files(phospho_sites, output_dir=os.getcwd() + '/networkin_files/', organism='human'):
@@ -17,7 +17,7 @@ def prepare_networkin_files(phospho_sites, output_dir=os.getcwd() + '/networkin_
 
     # Check if a supported organisms is supplied
     if organism != 'human' and organism != 'mouse' and organism != 'yeast':
-        raise StandardError('No sequences available for the requested organism: %s' % organism)
+        raise Exception('No sequences available for the requested organism: %s' % organism)
 
     # load UniProt/SwissProt sequences from the supplied data
     sequences = read_csv(os.path.split(__file__)[0] + '/data/sequences_' + organism + '.tab', sep='\t', index_col=0)
@@ -40,13 +40,13 @@ def prepare_networkin_files(phospho_sites, output_dir=os.getcwd() + '/networkin_
                 fasta_file.write(sequences.ix[psite.split('_')[0]].values[0] + '\n')
                 added_sequences.append(psite.split('_')[0])
             else:
-                print "Protein '%s' could not be found in the reviewed UniProt (Swiss-Prot) release." % \
-                      psite.split('_')[0]
+                print("Protein '%s' could not be found in the reviewed UniProt (Swiss-Prot) release." % \
+                      psite.split('_')[0])
                 added_sequences.append(psite.split('_')[0])
     # Close files and print success message
     site_file.close()
     fasta_file.close()
-    print 'Files for NetworKIN analysis successfully saved in %s' % output_dir
+    print('Files for NetworKIN analysis successfully saved in %s' % output_dir)
 
 
 def get_kinase_targets_from_networkin(file_path, add_omnipath=True, score_cut_off=1):

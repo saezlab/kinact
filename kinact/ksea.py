@@ -31,7 +31,7 @@
 #      http://www.gnu.org/licenses/gpl-3.0.html
 #
 # ######################################################################################################################
-from utils import np, Series, norm, multipletests, hypergeom
+from kinact.utils import np, Series, norm, multipletests, hypergeom
 
 __all__ = ['ksea_mean', 'ksea_delta', 'ksea_mean_alt']
 

@@ -22,9 +22,9 @@ def id_conversion(lst, fr='uniprot', to='gene_name'):
 
     # Check for parameter consistency
     if fr == to:
-        raise StandardError("Your function call doesn't make any sense: No need to match from %s to %s" % (fr, to))
+        raise Exception("Your function call doesn't make any sense: No need to match from %s to %s" % (fr, to))
     if len({fr, to}.intersection(['uniprot', 'gene_name', 'string_id'])) != 2:
-        raise StandardError("Please provide only identifiers of supported systems!")
+        raise Exception("Please provide only identifiers of supported systems!")
 
     # Load reduced id_mapping table from Uniprot
     id_mapping = read_csv(os.path.split(__file__)[0] + '/data/id_conversion.txt')
@@ -51,7 +51,7 @@ def get_kinase_targets(sources=None, organism='human'):
 
     # Check if a supported organisms is supplied
     if organism != 'human' and organism != 'mouse' and organism != 'yeast':
-        raise StandardError('No sequences available for the requested organism: %s' % organism)
+        raise Exception('No sequences available for the requested organism: %s' % organism)
 
     if organism == 'human':
         # Check that only allowed sources are used
@@ -60,7 +60,7 @@ def get_kinase_targets(sources=None, organism='human'):
         allowed_sources = ['ARN', 'CA1', 'dbPTM', 'DEPOD', 'HPRD', 'MIMP', 'Macrophage', 'NRF2ome',
                            'phosphoELM', 'PhosphoSite', 'SPIKE', 'SignaLink3', 'Signor', 'TRIP']
         if len(set(sources).difference(allowed_sources)) > 0 and sources != ['all']:
-            raise StandardError('Please use only the sources integrated into pypath!')
+            raise Exception('Please use only the sources integrated into pypath!')
         if sources == ['all']:
             sources = allowed_sources
         # Read in the data from OmniPath
@@ -165,10 +165,10 @@ def __update_pypath_resource():
     try:
         from pypath import main
     except:
-        raise StandardError('The package pypath is not installed on your machine. '
+        raise Exception('The package pypath is not installed on your machine. '
                             'Please install pypath before you continue!')
 
-    print 'Using pypath to update the prior-knowledge information about kinase-substrate interactions.'
+    print('Using pypath to update the prior-knowledge information about kinase-substrate interactions.')
 
     pa = main.PyPath()
 
@@ -178,7 +178,7 @@ def __update_pypath_resource():
 
     pa.export_ptms_tab(outfile=os.path.split(__file__)[0]+'/data/omnipath_ptms.txt')
 
-    print 'pypath resource successfully updated!'
+    print('pypath resource successfully updated!')
 
 
 def get_example_data():

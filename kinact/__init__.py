@@ -1,6 +1,6 @@
-from utils import *
+from kinact.utils import *
 
-import ksea
-import networkin
+import kinact.ksea
+import kinact.networkin
 
 __all__ = ['ksea', 'networkin']
