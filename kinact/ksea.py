@@ -37,7 +37,7 @@ __all__ = ['ksea_mean', 'ksea_delta', 'ksea_mean_alt']
 
 
 # MEAN/MEDIAN: Function for KSEA calculates as mean of the fold changes of the substrate set
-def ksea_mean(data_fc, interactions, mP, delta, minimum_set_size=5, median=False):
+def ksea_mean(data_fc, interactions, mP=None, delta=None, minimum_set_size=5, median=False):
     """
     Computes the kinase activity scores as mean/median of the fold changes in the substrate set.
     Statistical evaluation of the activity score is performed via a z-score.
@@ -53,12 +53,17 @@ def ksea_mean(data_fc, interactions, mP, delta, minimum_set_size=5, median=False
                       )
     """
 
+    if mP is None:
+        mP = data_fc.dropna().values.mean()
+    if delta is None:
+        delta = data_fc.dropna().values.std()
+
     # Find intersection between kinase substrate sets and detected p-sites
-    intersect = {kinase: list(set(interactions[kinase].replace(0, np.nan).dropna().index).intersection(data_fc.index))
-                 for kinase in interactions}
+    intersect = {kinase: list(set(interactions[kinase].replace(0, np.nan).dropna().index).intersection(
+        data_fc.dropna().index)) for kinase in interactions}
 
     # Filter for kinases that have at least five target p-sites in the data
-    intersect = {kinase: intersect[kinase] for kinase in intersect if len(intersect[kinase]) > minimum_set_size}
+    intersect = {kinase: intersect[kinase] for kinase in intersect if len(intersect[kinase]) >= minimum_set_size}
 
     # Global variables for the z-statistic
     mean_all = mP
@@ -66,18 +71,18 @@ def ksea_mean(data_fc, interactions, mP, delta, minimum_set_size=5, median=False
 
     if median:
         # Calculate the mean of the substrate set relative to the mean of the whole data set
-        scores = Series({kinase: np.median([data_fc.ix[intersect[kinase]]])
+        scores = Series({kinase: np.median(data_fc.ix[intersect[kinase]].values)
                          for kinase in intersect}).dropna()
 
-        z_scores = Series({kinase: abs((np.median([data_fc.ix[intersect[kinase]]]) - mean_all) *
+        z_scores = Series({kinase: abs((np.median(data_fc.ix[intersect[kinase]].values) - mean_all) *
                                        np.sqrt(len(intersect[kinase])) * 1 / sd_all)
                            for kinase in intersect}).dropna()
     else:
         # Calculate the mean of the substrate set relative to the mean of the whole data set
-        scores = Series({kinase: np.mean([data_fc.ix[intersect[kinase]]])
+        scores = Series({kinase: np.mean(data_fc.ix[intersect[kinase]].values)
                          for kinase in intersect}).dropna()
 
-        z_scores = Series({kinase: abs((np.mean([data_fc.ix[intersect[kinase]]]) - mean_all) *
+        z_scores = Series({kinase: abs((np.mean(data_fc.ix[intersect[kinase]].values) - mean_all) *
                                        np.sqrt(len(intersect[kinase])) * 1 / sd_all)
                            for kinase in intersect}).dropna()
 
