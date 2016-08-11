@@ -8,3 +8,4 @@ build/*
 kinact.egg-info/*
 dist/*
 doc/.ipynb_checkpoints/*
+doc/networkin_example_files/output.txt
