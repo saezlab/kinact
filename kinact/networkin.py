@@ -1,3 +1,17 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+#
+# ######################################################################################################################
+#
+#  File author(s): Jakob Wirbel (jakob.wirbel@gmail.com)
+#
+#
+#  Distributed under the GNU GPLv3 License.
+#  See accompanying file LICENSE.txt or copy at
+#      http://www.gnu.org/licenses/gpl-3.0.html
+#
+# ######################################################################################################################
+
 from kinact.utils import get_kinase_targets, pivot_table, read_csv, os, np, Series, norm, multipletests
 
 

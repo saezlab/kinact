@@ -7,6 +7,10 @@ The package has been implemented by Jakob Wirbel in the [Saez-Rodriguez Group at
 
 **Please be aware that the package is under on-going development.**
 
+## Licence
+
+Distributed under the GNU GPLv3 License. See accompanying file LICENSE.txt or copy at [http://www.gnu.org/licenses/gpl-3.0.html](http://www.gnu.org/licenses/gpl-3.0.html)
+
 ## Installation
 
 #### Mac/Linux Users
