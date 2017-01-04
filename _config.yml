@@ -12,11 +12,11 @@ kramdown:
 permalink:        pretty
 
 # Setup
-title:            PHONEMeS
-tagline:          Phosphorylation Networks for Mass Spectrometry
-description:      "Method to model signalling networks based on untargeted phosphoproteomics data"
-#url:              https://github.com/saezlab/PHONEMeS
-baseurl:          /PHONEMeS/
+title:            Kinact
+tagline:          Kinase Activity Toolbox
+description:      "Toolbox to score kinase activities based on phosphoproteomics data"
+#url:              https://github.com/saezlab/kinact
+baseurl:          /kinact/
 
 author:
   name:           'Jakob Wirbel'
@@ -24,7 +24,7 @@ author:
 paginate:         5
 
 # Custom vars
-version:          0.2.7
+version:          0.0.1
 
 github:
-  repo:           https://github.com/saezlab/PHONEMeS
+  repo:           https://github.com/saezlab/kinact
