@@ -3,7 +3,7 @@ layout: page
 title: Installation
 ---
 
-As of now, `kinact` is not yet a proper python package available via `pip`. Therefore, installation is a bit more tedious, but should be more or less straightforward, since kinact does not need any fancy dependencies.
+As of now, `kinact` is not yet a proper python package available via `pip`. Therefore, the installation is a bit more tedious, but should nevertheless be more or less straightforward, since `kinact` does not need any fancy dependencies.
 
 ## Mac/Linux Users
 
@@ -18,3 +18,10 @@ python setup.py install
 ## Windows Users
 
 We are working on it :-)
+
+## Dependencies
+
+[Pandas](http://pandas.pydata.org/)
+[Numpy](http://www.numpy.org/)
+[SciPy](http://scipy.org/)
+[statsmodels](http://statsmodels.sourceforge.net/)
