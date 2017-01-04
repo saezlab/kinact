@@ -3,7 +3,7 @@ layout: page
 title: Usage
 ---
 
-Quick start
+## Quick start
 
 The package contains example data from a publication by [de Graaf et al.](http://europepmc.org/abstract/MED/24850871), in which the phosphoproteome of Jurkat T-cells after prostaglandin E2 stimulation was analysed. The data can be loaded with:
 
