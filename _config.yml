@@ -12,6 +12,7 @@ kramdown:
 permalink:        pretty
 
 # Setup
+
 title:            Kinact
 tagline:          Kinase Activity Toolbox
 description:      "Toolbox to score kinase activities based on phosphoproteomics data"
@@ -19,12 +20,14 @@ description:      "Toolbox to score kinase activities based on phosphoproteomics
 baseurl:          /kinact/
 
 author:
-  name:           'Jakob Wirbel'
+  name:           'Author Name'
 
 paginate:         5
 
 # Custom vars
+
 version:          0.0.1
 
 github:
   repo:           https://github.com/saezlab/kinact
+
