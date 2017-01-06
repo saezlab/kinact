@@ -18,7 +18,7 @@ tagline:          Kinase Activity Toolbox
 description:      "Toolbox to score kinase activities based on phosphoproteomics data"
 #url:              https://github.com/saezlab/kinact
 baseurl:          /kinact/
-toollogo:         /projectDocumentationTemplate/tool_logo.png
+toollogo:         /kinact/public/logo_kinact.png
 
 
 author:
