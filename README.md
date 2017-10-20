@@ -24,7 +24,11 @@ python setup.py install
 ```
 #### Windows Users
 
+working on it :)
 
+## Trouble?
+
+Please use the GitHub Issue tracker if you run into any trouble or if you have feature requests. We will work on them as fast as possible.
 
 ## Quick start
 
