@@ -51,7 +51,7 @@ def prepare_networkin_files(phospho_sites, output_dir=os.getcwd() + '/networkin_
         if not psite.split('_')[0] in added_sequences:
             if psite.split('_')[0] in sequences.index:
                 fasta_file.write('>' + psite.split('_')[0] + '\n')
-                fasta_file.write(sequences.ix[psite.split('_')[0]].values[0] + '\n')
+                fasta_file.write(sequences.loc[psite.split('_')[0]].values[0] + '\n')
                 added_sequences.append(psite.split('_')[0])
             else:
                 print("Protein '%s' could not be found in the reviewed UniProt (Swiss-Prot) release." % \
@@ -98,8 +98,8 @@ def get_kinase_targets_from_networkin(file_path, add_omnipath=True, score_cut_of
     # or from web interface
     elif nwkin_results.columns.tolist()[0] == '#substrate':
         # re-create unique phospho-site identifiers
-        nwkin_results['p_site'] = [nwkin_results.ix[x, '#substrate'] + '_' + nwkin_results.ix[x, 'sequence'][5].upper()
-                                   + nwkin_results.ix[x, 'position'].astype(str) for x in nwkin_results.index]
+        nwkin_results['p_site'] = [nwkin_results.loc[x, '#substrate'] + '_' + nwkin_results.loc[x, 'sequence'][5].upper()
+                                   + nwkin_results.loc[x, 'position'].astype(str) for x in nwkin_results.index]
 
         # restrict output to kinases and phosphatases
         nwkin_results = nwkin_results.where((nwkin_results['tree'] == 'KIN') |
@@ -135,10 +135,10 @@ def get_kinase_targets_from_networkin(file_path, add_omnipath=True, score_cut_of
         # Add information from curated data
         for p_site in list(set(omnipath.index).intersection(adjacency_matrix.index)):
             for kin in omnipath.loc[p_site, :].replace(0, np.nan).dropna().index:
-                if omnipath.ix[p_site, kin] == -1:
-                    adjacency_matrix.ix[p_site, kin] = -1
+                if omnipath.loc[p_site, kin] == -1:
+                    adjacency_matrix.loc[p_site, kin] = -1
                 else:
-                    adjacency_matrix.ix[p_site, kin] = 1
+                    adjacency_matrix.loc[p_site, kin] = 1
 
         return adjacency_matrix
     else:
@@ -166,10 +166,10 @@ def weighted_mean(data_fc, interactions, mP, delta, minimum_set_size=5):
     """
 
     # Reduce interaction matrix to contain only phosphosites that are also detected in the data
-    interactions_red = interactions.ix[list(set(data_fc.index.tolist()).intersection(interactions.index.tolist())), :]
+    interactions_red = interactions.loc[list(set(data_fc.index.tolist()).intersection(interactions.index.tolist())), :]
 
     # Delete columns with less than minimum_set_size entries
-    interactions_red = interactions_red.ix[:, interactions_red.replace(0, np.nan).notnull().sum() >= minimum_set_size]
+    interactions_red = interactions_red.loc[:, interactions_red.replace(0, np.nan).notnull().sum() >= minimum_set_size]
 
     # Calculate mean of fold changes in susbtrate set, weighted with the networkin scores
     scores = Series({kinase: (data_fc*interactions_red[kinase]).sum()/float(

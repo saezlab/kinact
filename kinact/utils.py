@@ -43,8 +43,8 @@ def id_conversion(lst, fr='uniprot', to='gene_name'):
     id_mapping = read_csv(os.path.split(__file__)[0] + '/data/id_conversion.txt')
 
     # Map ids
-    results = [id_mapping.ix[np.where(id_mapping[fr] == s)[0], to].values.tolist()[0]
-               if len(id_mapping.ix[np.where(id_mapping[fr] == s)[0], to].values.tolist()) == 1 else np.nan
+    results = [id_mapping.loc[np.where(id_mapping[fr] == s)[0], to].values.tolist()[0]
+               if len(id_mapping.loc[np.where(id_mapping[fr] == s)[0], to].values.tolist()) == 1 else np.nan
                for s in lst]
     return results
 
@@ -97,7 +97,7 @@ def get_kinase_targets(sources=None, organism='human'):
                                                            for s in ptms_omnipath_phospho['Databases']]]
 
         # Change value to negative value for dephosphorylation events
-        ptms_omnipath_phospho.ix[ptms_omnipath_phospho['PTM_type'].str.startswith('de'), 'value'] = -1
+        ptms_omnipath_phospho.loc[ptms_omnipath_phospho['PTM_type'].str.startswith('de'), 'value'] = -1
 
         # Create pivot-table from pandas function
         adjacency_matrix = pivot_table(ptms_omnipath_phospho, values='value', index='p_site', columns='UniProt_A')
